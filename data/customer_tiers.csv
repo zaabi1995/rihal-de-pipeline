@@ -1,0 +1,8 @@
+customer_id,customer_name,tier,tier_updated_date
+CUST001,Acme Corporation,Gold,2024-01-01
+CUST002,Global Imports Ltd,Platinum,2024-01-01
+CUST003,Smith & Sons,Silver,2024-01-01
+CUST004,Tech Innovations Inc,Gold,2024-01-01
+CUST005,Retail Partners,Bronze,2024-01-01
+CUST006,Premium Goods Co,Platinum,2024-01-01
+CUST002,Global Imports Ltd,Gold,2024-02-15
