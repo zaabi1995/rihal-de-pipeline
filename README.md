@@ -190,10 +190,5 @@ docker-compose restart airflow-scheduler airflow-webserver
 - Consider what could go wrong in production
 - Think about data quality and consistency
 
-## 📞 Support
-
-If you encounter issues with the Docker setup or have questions about the challenge requirements, please contact the Rihal recruitment team.
-
----
 
 **Good luck! We're excited to see your approach to improving this system.**
