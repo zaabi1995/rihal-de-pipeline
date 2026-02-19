@@ -38,5 +38,5 @@ postgres-db-volume/
 .coverage
 htmlcov/
 
-# Secrets (for production - this challenge uses hardcoded values intentionally)
+# Secrets
 .env

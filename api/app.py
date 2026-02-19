@@ -8,7 +8,7 @@ import random
 
 app = Flask(__name__)
 
-# Simulate shipment data - intentionally includes duplicates and inconsistencies
+# Static mock data
 SHIPMENTS = [
     # Normal shipments
     {"shipment_id": "SHP001", "customer_id": "CUST001", "shipping_cost": 25.50, "shipment_date": "2024-01-15", "status": "delivered"},
@@ -17,7 +17,6 @@ SHIPMENTS = [
     {"shipment_id": "SHP004", "customer_id": "CUST001", "shipping_cost": 30.00, "shipment_date": "2024-01-25", "status": "delivered"},
     {"shipment_id": "SHP005", "customer_id": "CUST004", "shipping_cost": 55.25, "shipment_date": "2024-02-01", "status": "delivered"},
     
-    # Duplicate shipment_id with different data (data quality issue)
     {"shipment_id": "SHP002", "customer_id": "CUST002", "shipping_cost": 47.00, "shipment_date": "2024-01-16", "status": "delivered"},
     
     # February shipments
@@ -27,16 +26,15 @@ SHIPMENTS = [
     {"shipment_id": "SHP009", "customer_id": "CUST003", "shipping_cost": 42.00, "shipment_date": "2024-02-15", "status": "delivered"},
     {"shipment_id": "SHP010", "customer_id": "CUST006", "shipping_cost": 65.00, "shipment_date": "2024-02-18", "status": "delivered"},
     
-    # Edge cases
-    {"shipment_id": "SHP011", "customer_id": "CUST999", "shipping_cost": 18.50, "shipment_date": "2024-02-20", "status": "delivered"},  # Non-existent customer
-    {"shipment_id": "SHP012", "customer_id": "CUST002", "shipping_cost": -5.00, "shipment_date": "2024-02-22", "status": "delivered"},  # Negative cost (refund/error)
-    {"shipment_id": "SHP013", "customer_id": "CUST004", "shipping_cost": 0.00, "shipment_date": "2024-02-25", "status": "delivered"},  # Zero cost
-    {"shipment_id": "SHP014", "customer_id": None, "shipping_cost": 30.00, "shipment_date": "2024-02-28", "status": "delivered"},  # Null customer_id
+    {"shipment_id": "SHP011", "customer_id": "CUST999", "shipping_cost": 18.50, "shipment_date": "2024-02-20", "status": "delivered"},
+    {"shipment_id": "SHP012", "customer_id": "CUST002", "shipping_cost": -5.00, "shipment_date": "2024-02-22", "status": "delivered"},
+    {"shipment_id": "SHP013", "customer_id": "CUST004", "shipping_cost": 0.00, "shipment_date": "2024-02-25", "status": "delivered"},
+    {"shipment_id": "SHP014", "customer_id": None, "shipping_cost": 30.00, "shipment_date": "2024-02-28", "status": "delivered"},
     
     # March shipments
     {"shipment_id": "SHP015", "customer_id": "CUST001", "shipping_cost": 22.50, "shipment_date": "2024-03-01", "status": "delivered"},
     {"shipment_id": "SHP016", "customer_id": "CUST003", "shipping_cost": 38.00, "shipment_date": "2024-03-05", "status": "delivered"},
-    {"shipment_id": "SHP017", "customer_id": "CUST005", "shipping_cost": 50.00, "shipment_date": "2024-03-10", "status": "cancelled"},  # Cancelled shipment
+    {"shipment_id": "SHP017", "customer_id": "CUST005", "shipping_cost": 50.00, "shipment_date": "2024-03-10", "status": "cancelled"},
     {"shipment_id": "SHP018", "customer_id": "CUST002", "shipping_cost": 33.75, "shipment_date": "2024-03-15", "status": "delivered"},
     {"shipment_id": "SHP019", "customer_id": "CUST006", "shipping_cost": 44.50, "shipment_date": "2024-03-20", "status": "delivered"},
     {"shipment_id": "SHP020", "customer_id": "CUST004", "shipping_cost": 27.00, "shipment_date": "2024-03-25", "status": "delivered"},
