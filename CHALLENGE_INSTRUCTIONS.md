@@ -1,10 +1,3 @@
-# CHALLENGE_INSTRUCTIONS.md
-# Complete Challenge Description for Candidates
-
-Copy this content to distribute to candidates:
-
----
-
 # 🏗 The 2026 Rihal Data Engineering Talent Challenge
 ## "The Broken Pipeline"
 

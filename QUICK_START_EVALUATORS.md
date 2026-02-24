@@ -31,7 +31,6 @@ docker-compose exec postgres psql -U airflow -d airflow
 SELECT * FROM analytics.shipping_spend_by_tier 
 ORDER BY year_month, tier;
 
--- Expected: 4 rows (Bronze, Gold, Platinum, Silver across months)
 ```
 
 ### 5. **TEST IDEMPOTENCY BUG** 🐛
