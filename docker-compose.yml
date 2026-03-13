@@ -5,9 +5,9 @@ services:
  postgres:
     image: postgres:13
     environment:
-      - POSTGRES_USER=airflow
-      - POSTGRES_PASSWORD=airflow
-      - POSTGRES_DB=airflow
+      - POSTGRES_USER=${DB_USER:-airflow}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-airflow}
+      - POSTGRES_DB=${DB_NAME:-airflow}
     volumes:
       - postgres-db-volume:/var/lib/postgresql/data
       - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -25,7 +25,7 @@ services:
       context: ./api
       dockerfile: Dockerfile
     ports:
-      - "8080:8000"
+      - "8000:8000"
     restart: always
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
@@ -39,14 +39,21 @@ services:
       context: .
       dockerfile: Dockerfile
     depends_on:
-      - postgres
-      - api
+      postgres:
+        condition: service_healthy
+      api:
+        condition: service_healthy
     environment:
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
-      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres/airflow
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://${DB_USER:-airflow}:${DB_PASSWORD:-airflow}@postgres/${DB_NAME:-airflow}
       - AIRFLOW__CORE__LOAD_EXAMPLES=False
       - AIRFLOW__WEBSERVER__EXPOSE_CONFIG=True
       - AIRFLOW_UID=50000
+      - DB_HOST=postgres
+      - DB_NAME=${DB_NAME:-airflow}
+      - DB_USER=${DB_USER:-airflow}
+      - DB_PASSWORD=${DB_PASSWORD:-airflow}
+      - API_BASE_URL=http://api:8000
     volumes:
       - ./dags:/opt/airflow/dags
       - ./scripts:/opt/airflow/scripts
@@ -72,13 +79,20 @@ services:
       context: .
       dockerfile: Dockerfile
     depends_on:
-      - postgres
-      - airflow-webserver
+      postgres:
+        condition: service_healthy
+      airflow-webserver:
+        condition: service_started
     environment:
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
-      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres/airflow
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://${DB_USER:-airflow}:${DB_PASSWORD:-airflow}@postgres/${DB_NAME:-airflow}
       - AIRFLOW__CORE__LOAD_EXAMPLES=False
       - AIRFLOW_UID=50000
+      - DB_HOST=postgres
+      - DB_NAME=${DB_NAME:-airflow}
+      - DB_USER=${DB_USER:-airflow}
+      - DB_PASSWORD=${DB_PASSWORD:-airflow}
+      - API_BASE_URL=http://api:8000
     volumes:
       - ./dags:/opt/airflow/dags
       - ./scripts:/opt/airflow/scripts
