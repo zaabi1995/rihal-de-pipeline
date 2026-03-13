@@ -5,7 +5,6 @@ then generates analytics on shipping spend by customer tier
 """
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-from airflow.operators.bash import BashOperator
 from datetime import datetime, timedelta
 import sys
 
@@ -24,8 +23,8 @@ default_args = {
     'depends_on_past': False,
     'email_on_failure': False,
     'email_on_retry': False,
-    'retries': 1,
-    'retry_delay': timedelta(minutes=1),
+    'retries': 3,
+    'retry_delay': timedelta(minutes=2),
 }
 
 # Create DAG
@@ -68,4 +67,5 @@ load_analytics_task = PythonOperator(
 )
 
 # Define task dependencies
+# Extract tasks run in parallel, then transform, then load
 [extract_shipments_task, extract_tiers_task] >> transform_task >> load_analytics_task
