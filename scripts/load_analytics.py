@@ -32,7 +32,7 @@ def load_analytics_data():
     Calculate and load final analytics: Total Shipping Spend per Customer Tier per Month.
 
     Idempotency strategy: TRUNCATE the analytics table before inserting.
-    This is appropriate for a full-refresh aggregation — the entire result set
+    This is appropriate for a full-refresh aggregation - the entire result set
     is recomputed from the transform output every run. Simpler and more
     predictable than an upsert for this use case.
     """
@@ -53,7 +53,7 @@ def load_analytics_data():
             );
         """)
 
-        # TRUNCATE before INSERT for idempotency — re-runs won't duplicate rows
+        # TRUNCATE before INSERT for idempotency - re-runs won't duplicate rows
         cursor.execute("TRUNCATE TABLE analytics.shipping_spend_by_tier;")
         logger.info("Truncated analytics table for clean reload")
 
@@ -78,7 +78,7 @@ def load_analytics_data():
             FROM analytics.shipping_spend_by_tier;
         """)
         row_count, total_spend, total_shipments = cursor.fetchone()
-        logger.info(f"Verification — rows: {row_count}, total spend: {total_spend}, total shipments: {total_shipments}")
+        logger.info(f"Verification - rows: {row_count}, total spend: {total_spend}, total shipments: {total_shipments}")
 
         conn.commit()
 

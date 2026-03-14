@@ -19,9 +19,9 @@ This means whatever the upstream API returns ends up as executable SQL. If the A
 shipment_id: "'; DROP TABLE staging.shipments; --"
 ```
 
-That would terminate the INSERT, drop the staging table, and comment out the rest. Worse, they could use `COPY TO` or `pg_read_file()` to exfiltrate data from the database — including Airflow's own metadata (connection strings, user credentials, DAG configurations).
+That would terminate the INSERT, drop the staging table, and comment out the rest. Worse, they could use `COPY TO` or `pg_read_file()` to exfiltrate data from the database - including Airflow's own metadata (connection strings, user credentials, DAG configurations).
 
-The fix was straightforward: parameterized queries with `%s` placeholders. psycopg2 handles escaping, type conversion, and NULL handling automatically. This is one of those issues where the fix is simple but the potential impact is severe — exactly the kind of thing that should be caught in code review.
+The fix was straightforward: parameterized queries with `%s` placeholders. psycopg2 handles escaping, type conversion, and NULL handling automatically. This is one of those issues where the fix is simple but the potential impact is severe - exactly the kind of thing that should be caught in code review.
 
 What made it particularly concerning is that `extract_customer_tiers.py` in the same codebase already used parameterized queries correctly. The inconsistency suggests it was an oversight, not a deliberate choice.
 
@@ -35,13 +35,13 @@ What made it particularly concerning is that `extract_customer_tiers.py` in the 
 
 I chose TRUNCATE+INSERT (full refresh) over an incremental upsert pattern for the analytics table. Here's why:
 
-- The analytics table is an aggregation — it's derived entirely from staging data. There's no user-facing state to preserve, no partial updates to merge. Full refresh is simpler to reason about: every run produces the same output from the same input, period.
+- The analytics table is an aggregation - it's derived entirely from staging data. There's no user-facing state to preserve, no partial updates to merge. Full refresh is simpler to reason about: every run produces the same output from the same input, period.
 - An upsert (ON CONFLICT DO UPDATE) would require a unique constraint on (tier, year_month), which adds complexity for a table that's only ~10-20 rows. The marginal performance gain is meaningless at this scale.
 - The trade-off: if the pipeline ever runs in a high-concurrency environment where another process reads analytics while we're reloading, there's a brief window where the table is empty. For a daily batch pipeline, this is fine. For a real-time system, I'd use a swap pattern (write to a temp table, then rename).
 
 **SQL-based Transform vs. Python/Pandas**
 
-I kept the transform logic in SQL rather than pulling data into Python with pandas. SQL is more efficient for set-based operations (JOINs, GROUP BY, DISTINCT ON), and it keeps the data in the database rather than serializing it over the wire. The trade-off is that the SQL is harder to unit-test — I can verify the SQL text contains the right clauses, but I can't easily run it in a test without a real PostgreSQL instance. I supplemented with Python-based data quality tests that validate the same rules independently.
+I kept the transform logic in SQL rather than pulling data into Python with pandas. SQL is more efficient for set-based operations (JOINs, GROUP BY, DISTINCT ON), and it keeps the data in the database rather than serializing it over the wire. The trade-off is that the SQL is harder to unit-test - I can verify the SQL text contains the right clauses, but I can't easily run it in a test without a real PostgreSQL instance. I supplemented with Python-based data quality tests that validate the same rules independently.
 
 **Last-Write-Wins Dedup**
 
@@ -53,7 +53,7 @@ For duplicate shipment IDs (SHP002 appears twice with different costs), I chose 
 
 ### Where could your solution still fail?
 
-1. **API schema changes.** If the API adds, removes, or renames a field, the extraction will either crash (KeyError) or silently insert NULLs. I don't validate the response schema — a JSON Schema check or Pydantic model would help.
+1. **API schema changes.** If the API adds, removes, or renames a field, the extraction will either crash (KeyError) or silently insert NULLs. I don't validate the response schema - a JSON Schema check or Pydantic model would help.
 
 2. **Concurrent DAG runs.** If two DAG runs overlap (e.g., a manual trigger while the daily schedule is running), both will TRUNCATE the same staging tables. This could cause one run to see an empty table. Airflow's `max_active_runs=1` (default) mitigates this, but it's not explicitly set.
 
@@ -61,7 +61,7 @@ For duplicate shipment IDs (SHP002 appears twice with different costs), I chose 
 
 4. **CSV file corruption.** If `customer_tiers.csv` is malformed (wrong delimiter, encoding issues, missing headers), pandas will either crash or parse incorrectly. There's basic row validation but no file-level integrity check.
 
-5. **Clock skew in SCD join.** The tier matching uses `tier_updated_date <= shipment_date`. If tier updates are backdated or shipment dates are in the future, the join could pick the wrong tier. This is inherent to the SCD Type 2 pattern — it relies on consistent date semantics across data sources.
+5. **Clock skew in SCD join.** The tier matching uses `tier_updated_date <= shipment_date`. If tier updates are backdated or shipment dates are in the future, the join could pick the wrong tier. This is inherent to the SCD Type 2 pattern - it relies on consistent date semantics across data sources.
 
 ---
 
@@ -73,7 +73,7 @@ At 100x the current volume (~2,100 shipments instead of 21), the system would st
 
 **API extraction:** The current approach fetches all shipments in a single request. At 100x, this means a large JSON payload that could timeout or exceed memory. I'd implement pagination (the API already supports `start_date`/`end_date` filters) and process shipments in batches of 1,000.
 
-**Row-by-row inserts:** Both extract scripts insert one row at a time. At 100x, that's ~2,100 individual INSERT statements. PostgreSQL can handle this, but it's inefficient. I'd switch to `executemany()` or `COPY FROM` with a CSV buffer for bulk loading — easily 10-50x faster.
+**Row-by-row inserts:** Both extract scripts insert one row at a time. At 100x, that's ~2,100 individual INSERT statements. PostgreSQL can handle this, but it's inefficient. I'd switch to `executemany()` or `COPY FROM` with a CSV buffer for bulk loading - easily 10-50x faster.
 
 **Transform query:** The `LATERAL` subquery join is O(n*m) in the worst case (each shipment scans the tier table). With indexes on `customer_id` and `tier_updated_date`, this stays fast. At truly large scale (millions of rows), I'd materialize the SCD mapping into a lookup table first.
 
@@ -112,7 +112,7 @@ I'll walk through the `transform_shipment_data()` function's main SQL query, sin
 def transform_shipment_data():
 ```
 
-The function orchestrates data quality filtering, deduplication, and SCD-aware joining — all in a single SQL statement using CTEs (Common Table Expressions).
+The function orchestrates data quality filtering, deduplication, and SCD-aware joining - all in a single SQL statement using CTEs (Common Table Expressions).
 
 First, I log data quality stats by running COUNT queries against the raw staging data. This gives observability into how many rows are being filtered and why, without affecting the transform itself.
 
@@ -121,7 +121,7 @@ Then the main query:
 ```sql
 CREATE TABLE staging.shipments_with_tiers AS
 ```
-Creates the output table directly from the query result. This is a full refresh — the table is dropped first (via `DROP TABLE IF EXISTS` earlier in the function) and recreated from scratch.
+Creates the output table directly from the query result. This is a full refresh - the table is dropped first (via `DROP TABLE IF EXISTS` earlier in the function) and recreated from scratch.
 
 ```sql
 WITH deduped AS (
@@ -131,7 +131,7 @@ WITH deduped AS (
     ORDER BY shipment_id, loaded_at DESC
 ),
 ```
-**CTE 1: Deduplication.** `DISTINCT ON (shipment_id)` is a PostgreSQL extension that keeps only the first row for each unique `shipment_id`. Combined with `ORDER BY shipment_id, loaded_at DESC`, it keeps the most recently loaded version. This handles the SHP002 duplicate — we keep the $47.00 version (loaded second) and discard the $45.00 one.
+**CTE 1: Deduplication.** `DISTINCT ON (shipment_id)` is a PostgreSQL extension that keeps only the first row for each unique `shipment_id`. Combined with `ORDER BY shipment_id, loaded_at DESC`, it keeps the most recently loaded version. This handles the SHP002 duplicate - we keep the $47.00 version (loaded second) and discard the $45.00 one.
 
 ```sql
 clean AS (
@@ -143,9 +143,9 @@ clean AS (
 )
 ```
 **CTE 2: Data quality filters.** Three filters, each targeting a specific data issue:
-- `customer_id IS NOT NULL` — removes SHP014 (can't join to a tier without a customer)
-- `shipping_cost > 0` — removes SHP012 (negative) and SHP013 (zero)
-- `status != 'cancelled'` — removes SHP017 (cancelled shipments aren't real spend)
+- `customer_id IS NOT NULL` - removes SHP014 (can't join to a tier without a customer)
+- `shipping_cost > 0` - removes SHP012 (negative) and SHP013 (zero)
+- `status != 'cancelled'` - removes SHP017 (cancelled shipments aren't real spend)
 
 ```sql
 SELECT
@@ -188,17 +188,17 @@ GROUP BY tier, TO_CHAR(shipment_date, 'YYYY-MM');
 
 Step by step:
 
-1. **Source:** Reads from `staging.shipments_with_tiers` — the already-cleaned, deduplicated, tier-joined dataset.
+1. **Source:** Reads from `staging.shipments_with_tiers` - the already-cleaned, deduplicated, tier-joined dataset.
 
-2. **`TO_CHAR(shipment_date, 'YYYY-MM')`** — Converts each shipment's date to a year-month string (e.g., "2024-01" for January 2024). This is the time granularity for our analytics — we're aggregating by month, not by day or week.
+2. **`TO_CHAR(shipment_date, 'YYYY-MM')`** - Converts each shipment's date to a year-month string (e.g., "2024-01" for January 2024). This is the time granularity for our analytics - we're aggregating by month, not by day or week.
 
-3. **`GROUP BY tier, TO_CHAR(shipment_date, 'YYYY-MM')`** — Groups all shipments that share the same customer tier AND the same month. So "Gold customers in January 2024" is one group, "Gold customers in February 2024" is another.
+3. **`GROUP BY tier, TO_CHAR(shipment_date, 'YYYY-MM')`** - Groups all shipments that share the same customer tier AND the same month. So "Gold customers in January 2024" is one group, "Gold customers in February 2024" is another.
 
-4. **`SUM(shipping_cost)`** — Within each group, adds up all shipping costs. This gives us the total shipping spend for that tier in that month.
+4. **`SUM(shipping_cost)`** - Within each group, adds up all shipping costs. This gives us the total shipping spend for that tier in that month.
 
-5. **`COUNT(*)`** — Counts how many shipments are in each group. This gives context to the spend figure — $100 total spend from 2 shipments is different from $100 from 50 shipments.
+5. **`COUNT(*)`** - Counts how many shipments are in each group. This gives context to the spend figure - $100 total spend from 2 shipments is different from $100 from 50 shipments.
 
-6. **`INSERT INTO analytics.shipping_spend_by_tier`** — Writes the aggregated results directly into the analytics table. Because we TRUNCATE before this INSERT, the table always reflects the current state of the transform output.
+6. **`INSERT INTO analytics.shipping_spend_by_tier`** - Writes the aggregated results directly into the analytics table. Because we TRUNCATE before this INSERT, the table always reflects the current state of the transform output.
 
 The result is a compact summary table: one row per (tier, month) combination, showing total spend and shipment count. This is what business users would query for dashboards or reports.
 
@@ -216,12 +216,12 @@ Instead of using PostgreSQL staging tables as the intermediary between pipeline 
 
 **Why I rejected it:**
 
-1. **XCom has a size limit.** By default, XCom stores data in Airflow's metadata database (the same PostgreSQL instance). Values are limited to ~48KB in the default serializer. Even with a custom serializer, pushing hundreds of thousands of shipments through XCom is asking for trouble — it would bloat the metadata DB and slow down the Airflow scheduler.
+1. **XCom has a size limit.** By default, XCom stores data in Airflow's metadata database (the same PostgreSQL instance). Values are limited to ~48KB in the default serializer. Even with a custom serializer, pushing hundreds of thousands of shipments through XCom is asking for trouble - it would bloat the metadata DB and slow down the Airflow scheduler.
 
-2. **No SQL-level data integrity.** With staging tables, I can add constraints, indexes, and use the database's own transaction isolation. With XCom, data validation is purely application-level — one bug in the Python code and corrupt data flows through silently.
+2. **No SQL-level data integrity.** With staging tables, I can add constraints, indexes, and use the database's own transaction isolation. With XCom, data validation is purely application-level - one bug in the Python code and corrupt data flows through silently.
 
 3. **Debugging is harder.** When something goes wrong with staging tables, I can `SELECT * FROM staging.shipments` and see exactly what was extracted. With XCom, I'd need to dig through the Airflow UI or query the metadata database's `xcom` table, which stores serialized blobs.
 
-4. **The staging pattern is industry-standard.** ETL pipelines conventionally use staging areas in the database. It's well-understood, scales predictably, and makes the pipeline's state observable to anyone with SQL access — not just Airflow operators.
+4. **The staging pattern is industry-standard.** ETL pipelines conventionally use staging areas in the database. It's well-understood, scales predictably, and makes the pipeline's state observable to anyone with SQL access - not just Airflow operators.
 
 The trade-off: staging tables add infrastructure coupling (the pipeline depends on PostgreSQL being available between tasks), and they require explicit cleanup. But for a batch ETL pipeline processing structured tabular data, the reliability and observability benefits of database staging far outweigh the simplicity of XCom.

@@ -1,6 +1,6 @@
 """
 Test fixtures and shared utilities for pipeline tests.
-Uses an in-memory approach — mocks psycopg2 and requests so tests
+Uses an in-memory approach - mocks psycopg2 and requests so tests
 run without Docker or a real database.
 """
 import sys

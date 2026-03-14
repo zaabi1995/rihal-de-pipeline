@@ -7,7 +7,7 @@ Welcome to the Rihal Data Engineering Talent Challenge.
 
 You have inherited a partially implemented data pipeline that powers internal reporting.
 
-**The system is functional — but not production-ready.**
+**The system is functional - but not production-ready.**
 
 Your task is not to build from scratch.
 
@@ -16,7 +16,7 @@ Your task is to:
 ✅ **Audit. Improve. Harden. Justify.**
 
 This challenge reflects real engineering work at Rihal:
-*You rarely start with perfect systems — you improve them.*
+*You rarely start with perfect systems - you improve them.*
 
 ---
 
@@ -51,7 +51,7 @@ This data feeds internal analytics, including:
 
 **Total Shipping Spend per Customer Tier per Month**
 
-⚠️ The current pipeline runs — but you should not assume it is correct, reliable, or scalable.
+⚠️ The current pipeline runs - but you should not assume it is correct, reliable, or scalable.
 
 ---
 
@@ -59,7 +59,7 @@ This data feeds internal analytics, including:
 
 You are acting as the engineer responsible for making this system production-ready.
 
-### Task 1 — Engineering Audit
+### Task 1 - Engineering Audit
 
 Create a document:
 ```
@@ -79,7 +79,7 @@ We evaluate clarity of reasoning and prioritization.
 
 ---
 
-### Task 2 — Improve the Pipeline
+### Task 2 - Improve the Pipeline
 
 Refactor and improve the pipeline so that it is production-ready.
 
@@ -95,7 +95,7 @@ The specific implementation approach and prioritization is up to you.
 
 ---
 
-### Task 3 — Data Integrity & Modeling
+### Task 3 - Data Integrity & Modeling
 
 Ensure the system produces correct analytical output:
 
@@ -114,7 +114,7 @@ Engineering judgment is part of the evaluation.
 
 ---
 
-### Task 4 — Testing (Mandatory)
+### Task 4 - Testing (Mandatory)
 
 Create a `tests/` folder.
 
@@ -130,7 +130,7 @@ At minimum, your test suite should demonstrate that:
 
 ---
 
-### Task 5 — Design Reflection
+### Task 5 - Design Reflection
 
 Create:
 ```
@@ -249,4 +249,4 @@ After review:
 
 **Good luck! We're excited to see your approach.**
 
-*— The Rihal Data Engineering Team*
+*- The Rihal Data Engineering Team*

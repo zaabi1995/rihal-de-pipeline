@@ -1,6 +1,6 @@
-# DE Pipeline — Shipment Analytics
+# DE Pipeline - Shipment Analytics
 
-> **[View All Submissions — alizaabi.om/rihal-codestack](https://alizaabi.om/rihal-codestack/)**
+> **[View All Submissions - alizaabi.om/rihal-codestack](https://alizaabi.om/rihal-codestack/)**
 
 ![Showcase](screenshots/showcase-hero.png)
 ![Challenges](screenshots/showcase-challenges.png)
@@ -23,7 +23,7 @@
 
 ## Overview
 
-Audited and hardened a broken Airflow ETL pipeline for shipment analytics. Identified and resolved **12 issues** — spanning security vulnerabilities, reliability gaps, and missing data quality controls. Added **28 tests** to lock in correctness going forward.
+Audited and hardened a broken Airflow ETL pipeline for shipment analytics. Identified and resolved **12 issues** - spanning security vulnerabilities, reliability gaps, and missing data quality controls. Added **28 tests** to lock in correctness going forward.
 
 The pipeline extracts shipment data from a Flask API and customer tiers from a CSV file, transforms the data through a series of quality gates, and loads clean aggregated records into a PostgreSQL analytics table.
 
@@ -46,12 +46,12 @@ CSV File  → customer tier SCD     Invalid cost   19 → 18        Idempotent, 
 
 | # | Issue | Fix |
 |---|-------|-----|
-| 1 | **SQL injection** — f-string queries with raw user input | Parameterized queries (`%s`) throughout |
-| 2 | **No retry** — single API call, fails on transient errors | 3-retry exponential backoff |
-| 3 | **Port conflict** — API and Airflow both on 8080 | API moved to port 8000 |
-| 4 | **No idempotency** — re-runs appended duplicate rows | `TRUNCATE + INSERT` pattern |
-| 5 | **Hardcoded credentials** — DB password in plain source | Environment variables via `.env` |
-| 6 | **No tests** — zero test coverage | 28 tests across 3 test files |
+| 1 | **SQL injection** - f-string queries with raw user input | Parameterized queries (`%s`) throughout |
+| 2 | **No retry** - single API call, fails on transient errors | 3-retry exponential backoff |
+| 3 | **Port conflict** - API and Airflow both on 8080 | API moved to port 8000 |
+| 4 | **No idempotency** - re-runs appended duplicate rows | `TRUNCATE + INSERT` pattern |
+| 5 | **Hardcoded credentials** - DB password in plain source | Environment variables via `.env` |
+| 6 | **No tests** - zero test coverage | 28 tests across 3 test files |
 
 Full audit in [ENGINEERING_AUDIT.md](ENGINEERING_AUDIT.md).
 
@@ -69,7 +69,7 @@ Full audit in [ENGINEERING_AUDIT.md](ENGINEERING_AUDIT.md).
 
 ---
 
-## Test Coverage — 28 Tests, 100% Pass Rate
+## Test Coverage - 28 Tests, 100% Pass Rate
 
 | File | Tests | What's Covered |
 |------|-------|----------------|
@@ -160,11 +160,11 @@ docker-compose down -v     # stop + delete all data
 ## Author
 
 **Ali Al Zaabi**
-Rihal CODESTACKER 2026 — Challenge #4: Data Engineering
+Rihal CODESTACKER 2026 - Challenge #4: Data Engineering
 
 ---
 
 ## Other Challenges
-- [Visit Oman](https://github.com/zaabi1995/rihal-visit-oman) — Challenge #1: Frontend Development
-- [FlowCare API](https://github.com/zaabi1995/rihal-flowcare) — Challenge #2: Backend Development
-- [Muscat 2040](https://github.com/zaabi1995/rihal-muscat-2040) — Challenge #6: Data Analytics
+- [Visit Oman](https://github.com/zaabi1995/rihal-visit-oman) - Challenge #1: Frontend Development
+- [FlowCare API](https://github.com/zaabi1995/rihal-flowcare) - Challenge #2: Backend Development
+- [Muscat 2040](https://github.com/zaabi1995/rihal-muscat-2040) - Challenge #6: Data Analytics

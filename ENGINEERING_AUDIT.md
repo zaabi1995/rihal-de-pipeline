@@ -2,19 +2,19 @@
 
 **Auditor:** Ali Al Zaabi
 **Date:** 2026-03-14
-**Scope:** Full pipeline review — extraction, transformation, loading, orchestration, and infrastructure
+**Scope:** Full pipeline review - extraction, transformation, loading, orchestration, and infrastructure
 
 ---
 
 ## Executive Summary
 
-After cloning the repository and tracing through each layer of the pipeline, I found 10 distinct issues ranging from a port conflict that prevents the stack from starting, to a SQL injection vulnerability that could allow data exfiltration. Several of these compound: duplicate records flow through unchecked transforms into analytics that double-count on every re-run. None of the issues are theoretical — each one manifests on a normal `docker-compose up` followed by a DAG trigger.
+After cloning the repository and tracing through each layer of the pipeline, I found 10 distinct issues ranging from a port conflict that prevents the stack from starting, to a SQL injection vulnerability that could allow data exfiltration. Several of these compound: duplicate records flow through unchecked transforms into analytics that double-count on every re-run. None of the issues are theoretical - each one manifests on a normal `docker-compose up` followed by a DAG trigger.
 
 ---
 
 ## Issues Discovered
 
-### Issue 1: Port Conflict — Stack Fails to Start
+### Issue 1: Port Conflict - Stack Fails to Start
 
 - **Severity:** HIGH
 - **File:** `docker-compose.yml`, lines 28 and 57
@@ -36,7 +36,7 @@ After cloning the repository and tracing through each layer of the pipeline, I f
   """)
   ```
   Any shipment field containing a single quote (or a crafted payload) breaks the query or executes arbitrary SQL.
-- **Impact:** If the upstream API is compromised or returns malicious data, an attacker could read, modify, or delete any data in the PostgreSQL instance — including Airflow's own metadata tables.
+- **Impact:** If the upstream API is compromised or returns malicious data, an attacker could read, modify, or delete any data in the PostgreSQL instance - including Airflow's own metadata tables.
 - **Mitigation:** Replaced f-string interpolation with parameterized queries using `%s` placeholders, matching the pattern already used in `extract_customer_tiers.py`.
 
 ---
@@ -45,7 +45,7 @@ After cloning the repository and tracing through each layer of the pipeline, I f
 
 - **Severity:** HIGH
 - **File:** `scripts/extract_shipments.py`, lines 24–26
-- **Description:** The API call uses a bare `requests.get()` with no timeout, no status code check, and no retry. The mock API itself simulates 500 errors (every 10th request) and 5-second delays (every 7th request). The code blindly calls `response.json()` — a 500 response will either fail to parse or return an error object without a `data` key.
+- **Description:** The API call uses a bare `requests.get()` with no timeout, no status code check, and no retry. The mock API itself simulates 500 errors (every 10th request) and 5-second delays (every 7th request). The code blindly calls `response.json()` - a 500 response will either fail to parse or return an error object without a `data` key.
 - **Impact:** In production, transient API failures will crash the entire DAG run. With no retry, the pipeline requires manual re-triggering. The 5-second simulated latency could also cause upstream timeouts in constrained environments.
 - **Mitigation:** Added exponential backoff retry (3 attempts, 1s/2s/4s delays), HTTP status code validation via `raise_for_status()`, and a 30-second request timeout.
 
@@ -66,7 +66,7 @@ After cloning the repository and tracing through each layer of the pipeline, I f
 - **Severity:** HIGH
 - **File:** `scripts/load_analytics.py`, lines 34–42
 - **Description:** The load step does `INSERT INTO analytics.shipping_spend_by_tier` without clearing existing rows. Every re-run appends duplicate aggregated rows, so `SELECT SUM(total_shipping_spend)` returns 2x after the second run, 3x after the third, and so on.
-- **Impact:** Analytics numbers grow with every pipeline execution. Business users would see inflated spend figures. This is the kind of bug that erodes trust in data — someone eventually notices the numbers don't match, and then nobody trusts the dashboard.
+- **Impact:** Analytics numbers grow with every pipeline execution. Business users would see inflated spend figures. This is the kind of bug that erodes trust in data - someone eventually notices the numbers don't match, and then nobody trusts the dashboard.
 - **Mitigation:** Added `TRUNCATE TABLE analytics.shipping_spend_by_tier` before the INSERT. This is simpler and more predictable than an upsert for a full-refresh aggregation table.
 
 ---
@@ -81,13 +81,13 @@ After cloning the repository and tracing through each layer of the pipeline, I f
 
 ---
 
-### Issue 7: Bad Data — Negative Costs, Zero Costs, Null Customers, Cancelled Shipments
+### Issue 7: Bad Data - Negative Costs, Zero Costs, Null Customers, Cancelled Shipments
 
 - **Severity:** MEDIUM
 - **Files:** `api/app.py` (data), `scripts/transform_data.py` (missing filters)
 - **Description:** The source data contains several problematic records that flow straight through to analytics:
   - `SHP012`: shipping_cost = -5.00 (negative)
-  - `SHP013`: shipping_cost = 0.00 (zero — no revenue impact)
+  - `SHP013`: shipping_cost = 0.00 (zero - no revenue impact)
   - `SHP014`: customer_id = null (can't attribute to any tier)
   - `SHP017`: status = "cancelled" (shouldn't count as spend)
   - `SHP011`: customer_id = "CUST999" (not in customer_tiers.csv)
@@ -100,7 +100,7 @@ After cloning the repository and tracing through each layer of the pipeline, I f
 
 - **Severity:** MEDIUM
 - **File:** `data/customer_tiers.csv`, rows 2 and 8
-- **Description:** CUST002 has two tier entries — Platinum (effective 2024-01-01) and Gold (effective 2024-02-15). The current LEFT JOIN picks up both rows, creating duplicate shipments in the joined table.
+- **Description:** CUST002 has two tier entries - Platinum (effective 2024-01-01) and Gold (effective 2024-02-15). The current LEFT JOIN picks up both rows, creating duplicate shipments in the joined table.
 - **Impact:** Every CUST002 shipment gets doubled in the transform output, once with Platinum and once with Gold. This leads to double-counting in analytics.
 - **Mitigation:** Implemented SCD-aware (Slowly Changing Dimension) join logic in the transform step. Each shipment is matched to the customer tier that was effective on the shipment's date, using a correlated subquery to find the most recent tier_updated_date that's <= the shipment_date.
 
@@ -131,7 +131,7 @@ After cloning the repository and tracing through each layer of the pipeline, I f
 - **Severity:** LOW
 - **File:** `sql/init.sql`
 - **Description:** The init script only creates schemas and grants permissions. There are no table definitions, constraints, or indexes. The staging tables are created on-the-fly by the extract scripts with no NOT NULL constraints, no CHECK constraints, and no indexes.
-- **Impact:** Bad data (nulls, negatives) can enter the system unchecked at the database level. Queries on large tables without indexes would degrade performance. There's no defense-in-depth — the application code is the only barrier.
+- **Impact:** Bad data (nulls, negatives) can enter the system unchecked at the database level. Queries on large tables without indexes would degrade performance. There's no defense-in-depth - the application code is the only barrier.
 - **Mitigation:** Added table definitions in init.sql with NOT NULL constraints on critical fields, a CHECK constraint on `shipping_cost >= 0`, and indexes on `shipment_id`, `customer_id`, and `shipment_date`.
 
 ---
@@ -140,7 +140,7 @@ After cloning the repository and tracing through each layer of the pipeline, I f
 
 - **Severity:** MEDIUM
 - **File:** `tests/test_sample.py`
-- **Description:** The test directory contains only a sample test with `assert True`. There are no tests for any pipeline logic — no transform tests, no idempotency tests, no edge case coverage.
+- **Description:** The test directory contains only a sample test with `assert True`. There are no tests for any pipeline logic - no transform tests, no idempotency tests, no edge case coverage.
 - **Impact:** Regressions go undetected. Refactoring is risky because there's no safety net. New contributors have no way to verify their changes don't break existing behavior.
 - **Mitigation:** Created a comprehensive test suite: `test_extract_shipments.py` (retry logic, parameterized queries), `test_transform.py` (all filters, dedup, SCD joins), `test_load.py` (idempotency verification), and `conftest.py` with shared fixtures and mocks.
 

@@ -216,7 +216,7 @@ class TestDataQualityLogic:
         assert shp002[0]['shipping_cost'] == 47.00
 
     def test_all_filters_combined(self, sample_shipments):
-        """Apply all filters together — should produce the expected clean set."""
+        """Apply all filters together - should produce the expected clean set."""
         # Dedup (last-write-wins)
         seen = {}
         for s in sample_shipments:

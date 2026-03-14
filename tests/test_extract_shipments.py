@@ -18,7 +18,7 @@ class TestFetchShipmentsWithRetry:
     @patch('extract_shipments.requests.get')
     @patch('extract_shipments.time.sleep')  # Don't actually sleep in tests
     def test_successful_fetch_on_first_try(self, mock_sleep, mock_get):
-        """API returns 200 on first attempt — no retries needed."""
+        """API returns 200 on first attempt - no retries needed."""
         mock_response = MagicMock()
         mock_response.status_code = 200
         mock_response.json.return_value = {
@@ -39,7 +39,7 @@ class TestFetchShipmentsWithRetry:
     @patch('extract_shipments.requests.get')
     @patch('extract_shipments.time.sleep')
     def test_retry_on_connection_error(self, mock_sleep, mock_get):
-        """API fails twice then succeeds — retries should recover."""
+        """API fails twice then succeeds - retries should recover."""
         good_response = MagicMock()
         good_response.status_code = 200
         good_response.json.return_value = {"data": [], "count": 0}
@@ -60,7 +60,7 @@ class TestFetchShipmentsWithRetry:
     @patch('extract_shipments.requests.get')
     @patch('extract_shipments.time.sleep')
     def test_exhausted_retries_raises(self, mock_sleep, mock_get):
-        """All 3 attempts fail — should raise the exception."""
+        """All 3 attempts fail - should raise the exception."""
         mock_get.side_effect = Timeout("Request timed out")
 
         with pytest.raises(Timeout):
@@ -71,7 +71,7 @@ class TestFetchShipmentsWithRetry:
     @patch('extract_shipments.requests.get')
     @patch('extract_shipments.time.sleep')
     def test_http_500_triggers_retry(self, mock_sleep, mock_get):
-        """API returns 500 — raise_for_status should trigger retry."""
+        """API returns 500 - raise_for_status should trigger retry."""
         from requests.exceptions import HTTPError
 
         bad_response = MagicMock()

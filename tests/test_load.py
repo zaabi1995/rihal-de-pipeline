@@ -1,6 +1,6 @@
 """
 Tests for the analytics load step.
-Focus: idempotency — running twice should produce the same result, not duplicates.
+Focus: idempotency - running twice should produce the same result, not duplicates.
 """
 import sys
 import os
@@ -36,7 +36,7 @@ class TestLoadIdempotency:
         assert 'TRUNCATE' in sql_text
         assert 'INSERT INTO analytics.shipping_spend_by_tier' in sql_text
 
-        # Find positions — TRUNCATE must come before INSERT
+        # Find positions - TRUNCATE must come before INSERT
         truncate_idx = None
         insert_idx = None
         for i, c in enumerate(all_calls):
@@ -52,7 +52,7 @@ class TestLoadIdempotency:
 
     @patch('load_analytics.get_db_connection')
     def test_no_drop_table(self, mock_db_conn):
-        """Load should NOT use DROP TABLE — uses TRUNCATE instead."""
+        """Load should NOT use DROP TABLE - uses TRUNCATE instead."""
         mock_cursor = MagicMock()
         mock_cursor.rowcount = 3
         mock_cursor.fetchone.return_value = (3, 50.00, 6)
@@ -70,7 +70,7 @@ class TestLoadIdempotency:
         """
         Simulate running load twice.
         Because TRUNCATE runs first each time, the second run should
-        produce the same state — not double the rows.
+        produce the same state - not double the rows.
         """
         mock_cursor = MagicMock()
         mock_cursor.rowcount = 5
