@@ -17,7 +17,9 @@ RUN pip install --no-cache-dir \
     pandas==1.5.3 \
     requests==2.31.0 \
     psycopg2-binary==2.9.9 \
-    sqlalchemy==1.4.48
+    sqlalchemy==1.4.48 \
+    pytest==7.4.4 \
+    pytest-cov==4.1.0
 
 # Set working directory
 WORKDIR /opt/airflow
