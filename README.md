@@ -1,12 +1,18 @@
 # DE Pipeline — Shipment Analytics
 
+> **[View All Submissions — alizaabi.om/rihal-codestack](https://alizaabi.om/rihal-codestack/)**
+
+![Showcase](screenshots/showcase-main.png)
+
+**Showcase Page:** [alizaabi.om/rihal-codestack/pipeline.html](https://alizaabi.om/rihal-codestack/pipeline.html)
+
+---
+
 ![Rihal CODESTACKER 2026](https://img.shields.io/badge/Rihal_CODESTACKER_2026-Challenge_%234_Data_Engineering-blue?style=for-the-badge)
 ![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python&logoColor=white)
 ![Apache Airflow](https://img.shields.io/badge/Apache_Airflow-2.7-017CEE?style=flat-square&logo=apacheairflow&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-4169E1?style=flat-square&logo=postgresql&logoColor=white)
 ![pytest](https://img.shields.io/badge/Tests-28_passing-brightgreen?style=flat-square&logo=pytest)
-
-**Showcase Page**: [alizaabi.om/rihal-codestack/pipeline.html](https://alizaabi.om/rihal-codestack/pipeline.html)
 
 ---
 
@@ -154,3 +160,10 @@ docker-compose down -v     # stop + delete all data
 
 **Ali Al Zaabi**
 Rihal CODESTACKER 2026 — Challenge #4: Data Engineering
+
+---
+
+## Other Challenges
+- [Visit Oman](https://github.com/zaabi1995/rihal-visit-oman) — Challenge #1: Frontend Development
+- [FlowCare API](https://github.com/zaabi1995/rihal-flowcare) — Challenge #2: Backend Development
+- [Muscat 2040](https://github.com/zaabi1995/rihal-muscat-2040) — Challenge #6: Data Analytics
