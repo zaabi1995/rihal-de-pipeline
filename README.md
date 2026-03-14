@@ -1,105 +1,122 @@
-# Shipment Analytics Pipeline
+# DE Pipeline — Shipment Analytics
 
-A production-hardened Airflow ETL pipeline that processes shipment data from a REST API and customer tiers from CSV, producing monthly shipping spend analytics by customer tier.
+![Rihal CODESTACKER 2026](https://img.shields.io/badge/Rihal_CODESTACKER_2026-Challenge_%234_Data_Engineering-blue?style=for-the-badge)
+![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python&logoColor=white)
+![Apache Airflow](https://img.shields.io/badge/Apache_Airflow-2.7-017CEE?style=flat-square&logo=apacheairflow&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-4169E1?style=flat-square&logo=postgresql&logoColor=white)
+![pytest](https://img.shields.io/badge/Tests-28_passing-brightgreen?style=flat-square&logo=pytest)
 
-## Architecture
+**Showcase Page**: [alizaabi.om/rihal-codestack/pipeline.html](https://alizaabi.om/rihal-codestack/pipeline.html)
+
+---
+
+![Pipeline Showcase](screenshots/pipeline-showcase.png)
+
+---
+
+## Overview
+
+Audited and hardened a broken Airflow ETL pipeline for shipment analytics. Identified and resolved **12 issues** — spanning security vulnerabilities, reliability gaps, and missing data quality controls. Added **28 tests** to lock in correctness going forward.
+
+The pipeline extracts shipment data from a Flask API and customer tiers from a CSV file, transforms the data through a series of quality gates, and loads clean aggregated records into a PostgreSQL analytics table.
+
+---
+
+## Pipeline Flow
 
 ```
-                    ┌──────────────────────────────────┐
-                    │        Docker Compose             │
-                    │                                   │
- ┌─────────┐       │  ┌─────────┐    ┌──────────────┐ │
- │ Mock API │◄──────┼──│ Airflow │    │  PostgreSQL   │ │
- │ :8000    │       │  │ :8080   │───►│  :5432        │ │
- └─────────┘       │  └────┬────┘    │               │ │
-                    │       │         │  staging.*    │ │
- ┌─────────┐       │  ┌────▼────┐    │  analytics.*  │ │
- │ CSV File │◄──────┼──│Scheduler│───►│               │ │
- └─────────┘       │  └─────────┘    └──────────────┘ │
-                    └──────────────────────────────────┘
-
-Pipeline Flow:
-┌──────────────┐  ┌──────────────────┐  ┌───────────────┐  ┌──────────────┐
-│   Extract    │  │     Extract      │  │   Transform   │  │     Load     │
-│  Shipments   │  │  Customer Tiers  │  │  & Clean &    │  │  Analytics   │
-│  (from API)  │  │  (from CSV)      │  │  Join         │  │  (aggregate) │
-└──────┬───────┘  └────────┬─────────┘  └───────┬───────┘  └──────────────┘
-       │                   │                     │                  ▲
-       └───────────────────┴─────────►───────────┴──────────────────┘
-              parallel extract              sequential transform + load
+Extract (parallel)                Transform                     Load
+──────────────────────────────    ──────────────────────────    ─────────────────────────────
+Flask API → 21 shipment rows      Dedup          21 → 20        analytics.shipping_spend_by_tier
+  3-retry exponential backoff  →  Null filter    20 → 19    →   TRUNCATE + INSERT
+CSV File  → customer tier SCD     Invalid cost   19 → 18        Idempotent, safe to re-run
+                                  Tier join      18 → 17 clean
 ```
 
-## What Was Fixed
+---
 
-This pipeline was inherited with several critical issues. Here's what was identified and fixed:
+## 6 Critical Fixes
 
-| Issue | Severity | Fix |
-|-------|----------|-----|
-| Port conflict (API & Airflow both on 8080) | HIGH | API moved to port 8000 |
-| SQL injection in extract_shipments.py | HIGH | Parameterized queries (%s) |
-| No API error handling or retry | HIGH | 3 retries with exponential backoff |
-| No idempotency in analytics load | HIGH | TRUNCATE before INSERT |
-| DROP+CREATE staging pattern | MEDIUM | CREATE IF NOT EXISTS + TRUNCATE |
-| Duplicate shipment SHP002 | MEDIUM | Dedup by shipment_id (last-write-wins) |
-| Bad data not filtered | MEDIUM | Filters for null, negative, zero, cancelled |
-| SCD not handled for customer tiers | MEDIUM | LATERAL join with tier_updated_date |
-| Hardcoded credentials | MEDIUM | Environment variables |
-| No tests | MEDIUM | 28 tests across 3 test files |
-| Weak DAG retry config | LOW | 3 retries, 2-minute delay |
-| No database constraints | LOW | NOT NULL, CHECK, indexes |
+| # | Issue | Fix |
+|---|-------|-----|
+| 1 | **SQL injection** — f-string queries with raw user input | Parameterized queries (`%s`) throughout |
+| 2 | **No retry** — single API call, fails on transient errors | 3-retry exponential backoff |
+| 3 | **Port conflict** — API and Airflow both on 8080 | API moved to port 8000 |
+| 4 | **No idempotency** — re-runs appended duplicate rows | `TRUNCATE + INSERT` pattern |
+| 5 | **Hardcoded credentials** — DB password in plain source | Environment variables via `.env` |
+| 6 | **No tests** — zero test coverage | 28 tests across 3 test files |
 
-Full details in [ENGINEERING_AUDIT.md](ENGINEERING_AUDIT.md).
+Full audit in [ENGINEERING_AUDIT.md](ENGINEERING_AUDIT.md).
+
+---
+
+## Data Quality Gates
+
+```
+21  raw records from API
+ → 20  after deduplication (SHP002 appeared twice)
+ → 19  after null filter (missing customer_id)
+ → 18  after invalid cost removal (cost <= 0)
+ → 17  clean records loaded into analytics table
+```
+
+---
+
+## Test Coverage — 28 Tests, 100% Pass Rate
+
+| File | Tests | What's Covered |
+|------|-------|----------------|
+| `test_extract_shipments.py` | 10 | API fetch, retry logic, error handling, SQL injection prevention |
+| `test_transform.py` | 12 | Dedup, null filter, cost validation, SCD tier join, edge cases |
+| `test_load.py` | 6 | DB insert, idempotency, connection error handling |
+
+---
+
+## Tech Stack
+
+| Tool | Version |
+|------|---------|
+| Apache Airflow | 2.7 |
+| Python | 3.11 |
+| PostgreSQL | 15 |
+| Flask (Mock API) | Latest |
+| Docker Compose | v2 |
+| pytest | Latest |
+
+---
 
 ## Quick Start
 
-### Prerequisites
-- Docker Desktop installed and running
-- Docker Compose
-- At least 4GB of available RAM
-
-### Run the Pipeline
-
 ```bash
-# Start all services
+# Clone the repo
+git clone https://github.com/zaabi1995/rihal-de-pipeline.git
+cd rihal-de-pipeline
+
+# Start all services (Airflow, PostgreSQL, Mock API)
 docker-compose up -d
 
-# Wait ~2-3 minutes for initialization, then check:
-docker-compose ps
+# Wait ~2-3 minutes for Airflow to initialize, then open:
+# Airflow UI:  http://localhost:8080  (admin / admin)
+# Mock API:    http://localhost:8000/api/shipments
 
-# Access Airflow UI
-open http://localhost:8080    # Username: admin, Password: admin
-
-# Trigger the pipeline:
+# Trigger the pipeline
 # 1. Find "shipment_analytics_pipeline" in the DAG list
 # 2. Toggle it ON
-# 3. Click the Play button for a manual run
+# 3. Click the Play button to run manually
 
 # Check results
 docker-compose exec postgres psql -U airflow -d airflow -c \
   "SELECT * FROM analytics.shipping_spend_by_tier ORDER BY year_month, tier;"
-```
 
-### Service URLs
-- **Airflow UI:** http://localhost:8080 (admin/admin)
-- **Mock API:** http://localhost:8000/api/shipments
-- **PostgreSQL:** localhost:5432 (airflow/airflow)
-
-### Run Tests
-
-```bash
-# Inside the Airflow container
+# Run tests
 docker-compose exec airflow-webserver pytest /opt/airflow/tests/ -v
 
-# Or locally (requires Python 3.9+ with pytest, requests, psycopg2-binary, pandas)
-python -m pytest tests/ -v
+# Stop
+docker-compose down        # stop services
+docker-compose down -v     # stop + delete all data
 ```
 
-### Stop
-
-```bash
-docker-compose down        # Stop services
-docker-compose down -v     # Stop and delete all data
-```
+---
 
 ## Project Structure
 
@@ -108,61 +125,32 @@ docker-compose down -v     # Stop and delete all data
 ├── dags/
 │   └── shipment_analytics_dag.py    # Airflow DAG definition
 ├── scripts/
-│   ├── extract_shipments.py         # Extract from API (retry, parameterized SQL)
-│   ├── extract_customer_tiers.py    # Extract from CSV (validation)
-│   ├── transform_data.py            # Filter, dedup, SCD join
+│   ├── extract_shipments.py         # API extract (retry, parameterized SQL)
+│   ├── extract_customer_tiers.py    # CSV extract with validation
+│   ├── transform_data.py            # Filter, dedup, SCD tier join
 │   └── load_analytics.py            # Idempotent aggregation load
 ├── sql/
-│   └── init.sql                     # Schema, tables, constraints, indexes
+│   └── init.sql                     # Schema, constraints, indexes
 ├── data/
-│   └── customer_tiers.csv           # Customer tier source data
+│   └── customer_tiers.csv           # Customer tier source (SCD2)
 ├── api/
 │   ├── app.py                       # Mock shipment API (Flask)
 │   └── Dockerfile
 ├── tests/
 │   ├── conftest.py                  # Fixtures, mock DB, sample data
-│   ├── test_extract_shipments.py    # Retry, SQL injection prevention
-│   ├── test_transform.py            # Data quality filters, SCD, dedup
-│   └── test_load.py                 # Idempotency verification
-├── docker-compose.yml               # Service orchestration
-├── Dockerfile                       # Airflow image with dependencies
-├── ENGINEERING_AUDIT.md             # Detailed issue audit
+│   ├── test_extract_shipments.py
+│   ├── test_transform.py
+│   └── test_load.py
+├── docker-compose.yml
+├── Dockerfile
+├── ENGINEERING_AUDIT.md             # Full issue audit
 ├── DESIGN_REFLECTION.md             # Design decisions and trade-offs
 └── README.md
 ```
 
-## Data Quality Rules
+---
 
-The transform step applies these filters (in order):
+## Author
 
-1. **Dedup:** Multiple rows with the same `shipment_id` are reduced to one (most recently loaded wins)
-2. **Null customer:** Shipments with no `customer_id` are dropped (can't attribute to a tier)
-3. **Invalid cost:** Shipments with `shipping_cost <= 0` are dropped
-4. **Cancelled:** Shipments with `status = 'cancelled'` are excluded
-5. **SCD join:** Each shipment is matched to the customer tier effective on the shipment date
-6. **Unknown tier:** Customers not in the tier table get `tier = 'Unknown'`
-
-## Useful Commands
-
-```bash
-# View logs
-docker-compose logs airflow-scheduler -f
-docker-compose logs api -f
-docker-compose logs postgres -f
-
-# Connect to database
-docker-compose exec postgres psql -U airflow -d airflow
-
-# Check staging data
-docker-compose exec postgres psql -U airflow -d airflow -c "SELECT * FROM staging.shipments;"
-docker-compose exec postgres psql -U airflow -d airflow -c "SELECT * FROM staging.customer_tiers;"
-
-# Check transformed data
-docker-compose exec postgres psql -U airflow -d airflow -c "SELECT * FROM staging.shipments_with_tiers;"
-
-# Check API
-curl http://localhost:8000/api/shipments | python -m json.tool
-
-# Restart Airflow
-docker-compose restart airflow-scheduler airflow-webserver
-```
+**Ali Al Zaabi**
+Rihal CODESTACKER 2026 — Challenge #4: Data Engineering
