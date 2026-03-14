@@ -2,7 +2,8 @@
 
 > **[View All Submissions — alizaabi.om/rihal-codestack](https://alizaabi.om/rihal-codestack/)**
 
-![Showcase](screenshots/showcase-main.png)
+![Showcase](screenshots/showcase-hero.png)
+![Challenges](screenshots/showcase-challenges.png)
 
 **Showcase Page:** [alizaabi.om/rihal-codestack/pipeline.html](https://alizaabi.om/rihal-codestack/pipeline.html)
 
